@@ -2,17 +2,18 @@ import express from 'express';
 import path from 'path';
 import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
+import auth from './../routes/auth';
+import dotenv from 'dotenv';
+import Promise from 'bluebird';
 
+dotenv.config();
 const app = express();
 
-mongoose.connect('mongodb://localhost:27017/bookworm', { useNewUrlParser: true });
-var db = mongoose.connection;
+mongoose.Promise = Promise;
+mongoose.connect(process.env.MONGODB_URL, { useNewUrlParser: true });
+const db = mongoose.connection;
 db.on('error', () => console.log('Error connect to db'));
-db.once('open', () => {
-    console.log('Db connected');
-});
-
-var auth = require('./routes/auth');
+db.on('connected', () => console.log('Db connected'));
 
 app.use(bodyParser.json());
 app.use('/api/auth', auth);

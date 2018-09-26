@@ -1,13 +1,30 @@
-var mongoose = require('mongoose');
+import mongoose from 'mongoose';
+import bcryptjs from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 const schema = new mongoose.Schema(
     {
         email: { type: String, required: true, lowercase: true },
         passwordHash: { type: String }
     },
-    {
-        timestamps: true
-    }
+    { timestamps: true }
 );
 
-module.exports = mongoose.model('User', schema);
+schema.methods.isValidPassword = function isValidPassword(password) {
+    return bcryptjs.compareSync(password, this.passwordHash);
+}
+
+schema.methods.generateJWT = function generateJWT() {
+    return jwt.sign({
+        email: this.email
+    }, process.env.JWT_SECRET);
+}
+
+schema.methods.toAuthJSON = function toAuthJSON() {
+    return {
+        email: this.email,
+        token: this.generateJWT()
+    };
+}
+
+export default mongoose.model('User', schema);
